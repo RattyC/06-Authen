@@ -6,27 +6,44 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module'; 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
-
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-  }),// ตั้งค่า rate limiting โดยใช้ ThrottlerModule 
-  ThrottlerModule.forRoot([
-    {
-      ttl: 60_000,  // 1 minute
-      limit: 100,   // 100 requests per minute
-    },
-  ]),MongooseModule.forRootAsync({
-    imports: [ConfigModule],
-    inject: [ConfigService],
-    useFactory: (configService: ConfigService) => ({
-      uri: configService.get<string>('MONGO_URI'),
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
-  }), UsersModule, AuthModule],
+    
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000,
+        limit: 100,
+      },
+    ]),
+    
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+    }),
+    
+
+    UsersModule, 
+    AuthModule,
+    ProductsModule 
+  ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    AppService, 
+    { 
+      provide: APP_GUARD, 
+      useClass: ThrottlerGuard 
+    }
+  ],
 })
 export class AppModule { }

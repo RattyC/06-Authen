@@ -9,9 +9,9 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
     constructor(
-        private usersService: UsersService,
-        private jwtService: JwtService,
-        private config: ConfigService,
+        private readonly usersService: UsersService,
+        private readonly jwtService: JwtService,
+        private readonly config: ConfigService,
     ) { }
 
     private normalizeEmail(email: string) {
@@ -55,15 +55,11 @@ export class AuthService {
         });
         const tokens = await this.signTokens({ id: String(newUser._id), email: newUser.email, role: newUser.role });
         await this.storeRefreshHash(String(newUser._id), tokens.refresh_token);
-
-        // return this.signToken(String(newUser._id), newUser.email);
         return tokens;
     }
 
     async signIn(dto: AuthDto) {
         const email = this.normalizeEmail(dto.email);
-
-        // const user = await this.usersService.findByEmailWithPassword(email);
         const user = await this.usersService.findByEmailWithSecrets(email);
         if (!user) throw new UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
 
@@ -72,19 +68,8 @@ export class AuthService {
 
         const tokens = await this.signTokens({ id: String(user._id), email: user.email, role: user.role });
         await this.storeRefreshHash(String(user._id), tokens.refresh_token);
-
-        // return this.signToken(String(user._id), user.email);
         return tokens;
     }
-
-    // async signToken(userId: string, email: string) {
-    //     const payload = { sub: userId, email };
-    //     const token = await this.jwtService.signAsync(payload);
-
-    //     return {
-    //         access_token: token,
-    //     };
-    // }
 
     async refreshTokens(userId: string, email: string, role: string, refreshToken: string) {
         if (!refreshToken) throw new ForbiddenException('Access denied');

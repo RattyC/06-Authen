@@ -6,7 +6,7 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   // ตรวจสอบว่าผู้ใช้มีบทบาทที่จำเป็นหรือไม่
   canActivate(context: ExecutionContext): boolean {
@@ -28,3 +28,4 @@ export class RolesGuard implements CanActivate {
     return requiredRoles.includes(user.role);
   }
 }
+

@@ -2,32 +2,33 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+// import { AuthGuard } from '@nestjs/passport';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Throttle } from '@nestjs/throttler';
 
-
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(private authService: AuthService) { }
 
-    @Throttle({ default: { limit: 5, ttl: 60_000 } })
     @Post('signup')
     signup(@Body() dto: AuthDto) {
         return this.authService.signUp(dto);
     }
 
+    // จำกัดการยิง signin เพื่อลด brute force
+    @Throttle({ default: { limit: 10, ttl: 60_000 } })
     @Post('signin')
     signin(@Body() dto: AuthDto) {
         return this.authService.signIn(dto);
     }
 
+    // @UseGuards(AuthGuard('jwt')) 
     @UseGuards(AccessTokenGuard)
     @Get('profile')
     getProfile(@Req() req: any) {
         return req.user;
     }
-
 
     @UseGuards(RefreshTokenGuard)
     @Post('refresh')
@@ -42,5 +43,3 @@ export class AuthController {
         return this.authService.logout(req.user.userId);
     }
 }
-
-
